@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Para Mi Florecita</title>
+    <style>
+        :root {
+            --morado-oscuro: #4a148c;
+            --morado-medio: #7b1fa2;
+            --morado-claro: #e1bee7;
+            --blanco: #ffffff;
+            --fondo: #f3e5f5;
+            --error: #d32f2f;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--fondo);
+            color: var(--morado-oscuro);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* --- Animación de Fondo (Corazones) --- */
+        @keyframes fall {
+            0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+        }
+
+        .heart-bg {
+            position: absolute;
+            color: rgba(123, 31, 162, 0.3); /* Morado medio con transparencia */
+            font-size: 24px;
+            user-select: none;
+            pointer-events: none;
+            z-index: 0;
+            animation: fall linear infinite;
+        }
+
+        /* --- Contenedor Principal --- */
+        .main-container {
+            width: 95%;
+            max-width: 600px;
+            background: rgba(255, 255, 255, 0.95); /* Blanco ligeramente transparente */
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(74, 20, 140, 0.2);
+            text-align: center;
+            position: relative;
+            border: 2px solid var(--morado-claro);
+            z-index: 10;
+        }
+
+        .screen { display: none; }
+        .active { display: block; animation: fadeIn 0.5s ease; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        h1 { color: var(--morado-medio); font-size: 1.8rem; margin-top: 0; }
+        h2 { color: var(--morado-oscuro); font-size: 1.4rem; margin-bottom: 5px; }
+        p { line-height: 1.5; font-size: 1.1rem; }
+
+        button {
+            background-color: var(--morado-medio);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        button:hover { background-color: var(--morado-oscuro); transform: scale(1.03); }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
+
+        /* --- Estilos del Juego Visual --- */
+        #number-grid {
+            display: grid;
+            gap: 5px;
+            padding: 10px;
+            background-color: #fafafa;
+            border-radius: 10px;
+            border: 1px solid var(--morado-claro);
+            margin-bottom: 15px;
+            font-family: monospace;
+            user-select: none;
+        }
+
+        .number-item {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: default;
+            color: #555;
+            transition: background 0.2s;
+            border-radius: 3px;
+        }
+
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            max-width: 250px;
+            padding: 12px;
+            border: 2px solid var(--morado-claro);
+            border-radius: 10px;
+            outline: none;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .feedback { min-height: 20px; font-size: 0.9rem; margin: 5px 0; }
+        .error { color: var(--error); font-weight: bold; }
+
+        /* Temporizador */
+        #timer-text { font-size: 1.3rem; font-weight: bold; color: var(--morado-medio); margin-bottom: 10px; }
+
+        /* Panel de Game Over */
+        .game-over-panel {
+            background-color: rgba(211, 47, 47, 0.1);
+            border: 2px solid var(--error);
+            border-radius: 15px;
+            padding: 20px;
+            color: var(--error);
+            margin-top: 15px;
+        }
+
+        /* --- Pantalla de Victoria y Carta --- */
+        .win-heart { font-size: 4rem; color: #e91e63; animation: pulse 1s infinite; margin: 20px 0; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+
+        .final-code {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--morado-oscuro);
+            background: var(--morado-claro);
+            padding: 15px;
+            border-radius: 15px;
+            display: inline-block;
+            margin: 15px 0;
+            border: 3px dashed var(--morado-medio);
+        }
+
+        .letter-box {
+            text-align: justify;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            border-left: 4px solid var(--morado-medio);
+            font-family: 'Georgia', serif;
+            font-style: italic;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
+        /* --- Animación de Flores (Fondo de Carta) --- */
+        @keyframes floatFlower {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.8; }
+            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+        }
+        .flower-bg {
+            position: absolute;
+            color: rgba(156, 39, 176, 0.4); /* Flores moradas */
+            font-size: 30px;
+            user-select: none;
+            pointer-events: none;
+            z-index: -1;
+            bottom: -50px;
+            animation: floatFlower linear infinite;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="bg-hearts-container"></div>
+
+    <div class="main-container">
+        <div id="screen-start" class="screen active">
+            <h1>Hola mi amor</h1>
+            <p style="font-size: 1.3rem;">Quedan 13 dias, ya casi es...</p>
+            <p>He preparado otro pequeño desafío visual para ti. Necesito que encuentres el <strong>número diferente</strong> rápido antes de que se acabe el tiempo.</p>
+            <p>Son 4 niveles. ¡Tú puedes, mi vida!</p>
+            <button onclick="startGame()">inicia mi florecita</button>
+        </div>
+
+        <div id="screen-game" class="screen">
+            <div id="level-indicator" style="font-weight: bold; margin-bottom: 5px;">Nivel: 1/4</div>
+            <div id="timer-text">--</div>
+
+            <div id="number-grid"></div>
+
+            <div class="controls">
+                <input type="text" id="answer-input" placeholder="Escribe el número aquí" autocomplete="off" inputmode="numeric">
+                <div class="feedback"><span id="feedback-text" class="error"></span></div>
+                <button id="submit-btn" onclick="checkAnswer()">Enviar</button>
+            </div>
+        </div>
+
+        <div id="screen-gameover" class="screen">
+            <div class="game-over-panel">
+                <h2>¡Oh no!</h2>
+                <p><strong>Lo siento mi florecita, te has tardado de masiado sigelo intentando.</strong></p>
+            </div>
+            <button onclick="resetGame()">Reiniciar desde Nivel 1</button>
+        </div>
+
+        <div id="screen-win" class="screen">
+            <div class="win-heart">❤️</div>
+            <h1>¡Lo lograste!</h1>
+            <p>Tu código es:</p>
+            <div class="final-code">1</div>
+            <p><strong>Recuerda tomar nota de tu codigo: 1 es la llave que te llevara mas alla.</strong></p>
+            <button onclick="showPasswordScreen()">Siguiente</button>
+        </div>
+
+        <div id="screen-password" class="screen">
+            <h2>abre la carta</h2>
+            <p>Para leer lo que te escribí, necesitas una contraseña de tres dígitos.</p>
+            <p style="color: var(--morado-medio); font-weight: bold;">Pista: Ingresa los dígitos que llevas hasta el momento.</p>
+            <input type="password" id="password-input" maxlength="3" placeholder="***">
+            <div class="feedback"><span id="pass-feedback" class="error"></span></div>
+            <button onclick="checkPassword()">Abrir</button>
+        </div>
+
+        <div id="screen-letter" class="screen" style="position: relative;">
+            <div id="bg-flowers-container"></div>
+            
+            <h2>Mi carta:</h2>
+            <div class="letter-box">
+                <p><strong>Mi florecita hermosa, reina de mi vida:</strong></p>
+                <p>Sé que suelo escribirte mucho y tal vez pienses que te canso, pero es la única manera que encuentro para expresarte todo lo que me haces sentir. Sin embargo, hoy no vengo a hablar solo de eso; vengo a recordarte que ya casi es tu cumpleaños.</p>
+                <p>Será el primero que pasamos juntos los dos y, ahora, con el regalo más grande: nuestro bebé, ese retoñito de amor.</p>
+                <p>Quiero que sepas que siempre me siento orgulloso de ti, y estoy seguro de que nuestro hijo también lo estará. Me hace inmensamente feliz que seas tú la madre de nuestro bebé y la mujer que acompaña mi vida. Te admiro como a nadie más; soy tu fan número uno y mis ojos brillan cada vez que te ven hacer esas cosas que solo tú sabes hacer.</p>
+                <p>Eres una mujer increíble y siempre te lo he dicho: mereces lo mejor del mundo. Y bueno, ¡lo mejor soy yo! jajajaja. Te amo, mi florecita.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Generador de Corazones de Fondo ---
+        function createBackgroundHearts() {
+            const container = document.getElementById('bg-hearts-container');
+            for (let i = 0; i < 30; i++) {
+                const heart = document.createElement('div');
+                heart.className = 'heart-bg';
+                heart.innerText = '❤️';
+                heart.style.left = Math.random() * 100 + 'vw';
+                heart.style.animationDuration = (Math.random() * 5 + 5) + 's'; // 5-10s
+                heart.style.animationDelay = (Math.random() * 5) + 's';
+                container.appendChild(heart);
+            }
+        }
+        createBackgroundHearts();
+
+        // --- Lógica del Juego ---
+        const levelConfig = [
+            { level: 1, size: 5, fill: '8', diff: '3', font: '1.4rem', time: null },
+            { level: 2, size: 10, fill: '88', diff: '38', font: '1.2rem', time: 30 },
+            { level: 3, size: 12, fill: '333', diff: '3B3', font: '1rem', time: 20 },
+            { level: 4, size: 15, fill: '2222', diff: '2Z22', font: '0.85rem', time: 15 }
+        ];
+
+        let currentLevelIndex = 0;
+        let correctAnswer = "";
+        let timerInterval = null;
+        let timeLeft = 0;
+
+        const answerInput = document.getElementById('answer-input');
+
+        // Escuchar "Enter"
+        answerInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') checkAnswer(); });
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function startGame() {
+            currentLevelIndex = 0;
+            showScreen('screen-game');
+            loadLevel();
+        }
+
+        function resetGame() {
+            clearInterval(timerInterval);
+            startGame();
+        }
+
+        function loadLevel() {
+            const config = levelConfig[currentLevelIndex];
+            clearInterval(timerInterval);
+
+            document.getElementById('level-indicator').innerText = `Nivel: ${config.level}/4`;
+            answerInput.value = "";
+            answerInput.focus();
+            document.getElementById('feedback-text').innerText = "";
+            correctAnswer = config.diff.toLowerCase();
+
+            // Generar Grid
+            const grid = document.getElementById('number-grid');
+            grid.innerHTML = "";
+            grid.style.gridTemplateColumns = `repeat(${config.size}, 1fr)`;
+            grid.style.fontSize = config.font;
+
+            const totalItems = config.size * config.size;
+            const differentIndex = Math.floor(Math.random() * totalItems);
+
+            for (let i = 0; i < totalItems; i++) {
+                const item = document.createElement('div');
+                item.className = 'number-item';
+                item.innerText = (i === differentIndex) ? config.diff : config.fill;
+                grid.appendChild(item);
+            }
+
+            // Temporizador
+            const timerText = document.getElementById('timer-text');
+            if (config.time) {
+                timeLeft = config.time;
+                timerText.innerText = `Tiempo: ${timeLeft}s`;
+                timerText.style.display = 'block';
+                timerInterval = setInterval(() => {
+                    timeLeft--;
+                    timerText.innerText = `Tiempo: ${timeLeft}s`;
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        showScreen('screen-gameover');
+                    }
+                }, 1000);
+            } else {
+                timerText.style.display = 'none';
+            }
+        }
+
+        function checkAnswer() {
+            const userAnswer = answerInput.value.trim().toLowerCase();
+            if (userAnswer === correctAnswer) {
+                currentLevelIndex++;
+                if (currentLevelIndex < levelConfig.length) {
+                    loadLevel();
+                } else {
+                    clearInterval(timerInterval);
+                    showScreen('screen-win');
+                }
+            } else {
+                document.getElementById('feedback-text').innerText = "¡Ese no es, mi amor!";
+                answerInput.value = "";
+                answerInput.focus();
+            }
+        }
+
+        // --- Lógica de la Carta y Contraseña ---
+        function showPasswordScreen() {
+            showScreen('screen-password');
+        }
+
+        function checkPassword() {
+            const passInput = document.getElementById('password-input').value;
+            if (passInput === '019') {
+                showScreen('screen-letter');
+                createBackgroundFlowers(); // Iniciar flores al abrir la carta
+            } else {
+                document.getElementById('pass-feedback').innerText = "Contraseña incorrecta, revisa tus códigos.";
+                document.getElementById('password-input').value = "";
+            }
+        }
+
+        // --- Generador de Flores de Fondo (para la carta) ---
+        function createBackgroundFlowers() {
+            const container = document.getElementById('bg-flowers-container');
+            const flowers = ['🌸', '🍇', '🔮', '💜', '🌺'];
+            for (let i = 0; i < 15; i++) {
+                setTimeout(() => {
+                    const flower = document.createElement('div');
+                    flower.className = 'flower-bg';
+                    flower.innerText = flowers[Math.floor(Math.random() * flowers.length)];
+                    flower.style.left = Math.random() * 100 + '%';
+                    flower.style.animationDuration = (Math.random() * 4 + 4) + 's'; // 4-8s
+                    container.appendChild(flower);
+                    
+                    // Limpiar
+                    setTimeout(() => flower.remove(), 8000);
+                }, i * 300);
+            }
+            // Seguir generando flores
+            setInterval(() => {
+                    const flower = document.createElement('div');
+                    flower.className = 'flower-bg';
+                    flower.innerText = flowers[Math.floor(Math.random() * flowers.length)];
+                    flower.style.left = Math.random() * 100 + '%';
+                    flower.style.animationDuration = (Math.random() * 4 + 4) + 's';
+                    container.appendChild(flower);
+                    setTimeout(() => flower.remove(), 8000);
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
